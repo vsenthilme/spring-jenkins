@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+
+    tools {
+        gradle 'Gradle_6.3' // Adjust this to your Gradle version
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Build') {
+            steps {
+                sh './gradlew clean build'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh './gradlew test'
+                junit '**/build/test-results/test/*.xml'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh './gradlew publish'
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '**/build/libs/*.jar', allowEmptyArchive: true
+            mail to: 'vsenthilmecs@gmail.com',
+                 subject: "Build ${currentBuild.fullDisplayName}",
+                 body: "Build ${currentBuild.fullDisplayName} completed with status: ${currentBuild.currentResult}"
+        }
+    }
+}
